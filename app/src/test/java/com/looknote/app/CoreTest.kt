@@ -34,11 +34,33 @@ class CoreTest {
         assertEquals(CreativeLook.FL, back.look)
         assertEquals(3, back.value(LookParam.CONTRAST))
         assertEquals(9, back.value(LookParam.FADE))
-        assertEquals(3, back.value(LookParam.SHARPNESS_RANGE))
+        assertEquals(0, back.value(LookParam.SHARPNESS_RANGE))
         assertEquals(5200, back.kelvin)
         assertEquals(1.5, back.wbAB, 0.0001)
         assertEquals(-0.75, back.wbGM, 0.0001)
         assertEquals("Ghi chú", back.notes)
+    }
+
+    @Test
+    fun pictureProfileRoundTrip() {
+        val r = com.looknote.app.model.BuiltInRecipes.all.first { it.isPP }
+        val back = RecipeCodec.fromShareCode(RecipeCodec.toShareCode(r))!!
+        assertTrue(back.isPP)
+        assertEquals(r.pp, back.pp)
+        assertEquals(r.source, back.source)
+        assertEquals("PP", back.badge())
+    }
+
+    @Test
+    fun builtInsAreValid() {
+        val all = com.looknote.app.model.BuiltInRecipes.all
+        assertEquals(all.size, all.map { it.id }.toSet().size)
+        all.forEach { r ->
+            LookParam.entries.forEach { p -> assertEquals(r.params[p] ?: p.default, r.value(p)) }
+            assertEquals(WbShift.snap(r.wbAB, WbShift.STEP_AB), r.wbAB, 0.0)
+            assertEquals(WbShift.snap(r.wbGM, WbShift.STEP_GM), r.wbGM, 0.0)
+        }
+        assertEquals(30, all.size)
     }
 
     @Test

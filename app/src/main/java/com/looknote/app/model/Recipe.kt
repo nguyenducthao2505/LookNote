@@ -54,11 +54,11 @@ enum class LookParam(val key: String, val label: String, val min: Int, val max: 
     FADE("fade", "Phai màu", 0, 9, 0),
     SATURATION("saturation", "Bão hòa", -9, 9, 0),
     SHARPNESS("sharpness", "Độ nét", -9, 9, 0),
-    SHARPNESS_RANGE("sharpnessRange", "Phạm vi nét", 1, 5, 3),
+    SHARPNESS_RANGE("sharpnessRange", "Phạm vi nét", -4, 4, 0),
     CLARITY("clarity", "Độ trong", -9, 9, 0);
 
     fun format(v: Int): String = when {
-        this == FADE || this == SHARPNESS_RANGE -> v.toString()
+        this == FADE -> v.toString()
         v > 0 -> "+$v"
         else -> v.toString()
     }
@@ -85,6 +85,70 @@ enum class WhiteBalance(val key: String, val label: String, val short: String) {
 
     companion object {
         fun fromKey(k: String?): WhiteBalance = entries.firstOrNull { it.key == k } ?: AUTO
+    }
+}
+
+/** Loai cong thuc: Creative Look hoac Picture Profile. */
+enum class RecipeKind(val key: String, val label: String) {
+    CREATIVE_LOOK("cl", "Creative Look"),
+    PICTURE_PROFILE("pp", "Picture Profile");
+
+    companion object {
+        fun fromKey(k: String?): RecipeKind = entries.firstOrNull { it.key == k } ?: CREATIVE_LOOK
+    }
+}
+
+/** Thong so Picture Profile (PP) cua Sony. Gia tri so theo thang cua may. */
+data class PictureProfile(
+    val slot: String = "",
+    val gamma: String = "",
+    val blackGammaRange: String = "",
+    val blackGammaLevel: Int = 0,
+    val blackLevel: Int = 0,
+    val kneeMode: String = "Manual",
+    val kneePoint: String = "",
+    val kneeSlope: Int = 0,
+    val colorMode: String = "",
+    val saturation: Int = 0,
+    val colorPhase: Int = 0,
+    val depthR: Int = 0,
+    val depthG: Int = 0,
+    val depthB: Int = 0,
+    val depthC: Int = 0,
+    val depthM: Int = 0,
+    val depthY: Int = 0,
+    val detailLevel: Int = 0,
+    val detailMode: String = "Manual",
+    val vhBalance: Int = 0,
+    val bwBalance: String = "Type1",
+    val limit: Int = 0,
+    val crispening: Int = 0,
+    val highlightDetail: Int = 0,
+) {
+    /** Danh sach (nhom, nhan, gia tri) de hien thi. */
+    fun rows(): List<Triple<String, String, String>> {
+        fun sg(v: Int) = if (v > 0) "+$v" else v.toString()
+        val g = "Gamma & màu"
+        val d = "Chi tiết"
+        val c = "Độ đậm màu"
+        return listOf(
+            Triple(g, "Gamma", gamma.ifBlank { "—" }),
+            Triple(g, "Black Gamma", listOf(blackGammaRange, sg(blackGammaLevel)).filter { it.isNotBlank() }.joinToString(" ")),
+            Triple(g, "Black Level", sg(blackLevel)),
+            Triple(g, "Knee", listOf(kneeMode, kneePoint, sg(kneeSlope)).filter { it.isNotBlank() }.joinToString(" ")),
+            Triple(g, "Color Mode", colorMode.ifBlank { "—" }),
+            Triple(g, "Saturation", sg(saturation)),
+            Triple(g, "Color Phase", sg(colorPhase)),
+            Triple(c, "R", sg(depthR)), Triple(c, "G", sg(depthG)), Triple(c, "B", sg(depthB)),
+            Triple(c, "C", sg(depthC)), Triple(c, "M", sg(depthM)), Triple(c, "Y", sg(depthY)),
+            Triple(d, "Level", sg(detailLevel)),
+            Triple(d, "Mode", detailMode),
+            Triple(d, "V/H Balance", sg(vhBalance)),
+            Triple(d, "B/W Balance", bwBalance),
+            Triple(d, "Limit", limit.toString()),
+            Triple(d, "Crispening", crispening.toString()),
+            Triple(d, "Hi-Light Detail", highlightDetail.toString()),
+        )
     }
 }
 
@@ -123,7 +187,9 @@ object WbShift {
 data class Recipe(
     val id: String = UUID.randomUUID().toString(),
     val name: String = "",
+    val kind: RecipeKind = RecipeKind.CREATIVE_LOOK,
     val look: CreativeLook = CreativeLook.ST,
+    val pp: PictureProfile? = null,
     val params: Map<LookParam, Int> = emptyMap(),
     val wb: WhiteBalance = WhiteBalance.AUTO,
     val kelvin: Int = 5500,
@@ -133,11 +199,17 @@ data class Recipe(
     val exposureComp: String = "",
     val camera: String = "",
     val notes: String = "",
+    val source: String = "",
     val favorite: Boolean = false,
     val builtIn: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
 ) {
+    val isPP: Boolean get() = kind == RecipeKind.PICTURE_PROFILE
+
+    /** Chu tren huy hieu: ma Look hoac "PP". */
+    fun badge(): String = if (isPP) "PP" else look.code
+
     fun value(p: LookParam): Int = (params[p] ?: p.default).coerceIn(p.min, p.max)
 
     fun withValue(p: LookParam, v: Int): Recipe =
@@ -151,6 +223,10 @@ data class Recipe(
 
     /** Dong tom tat ngan, vi du: "FL · C+2 H-1 S+1 ...". */
     fun summary(): String {
+        if (isPP) {
+            val p = pp ?: PictureProfile()
+            return listOf(p.slot, p.gamma, p.colorMode).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { "Picture Profile" }
+        }
         val nonDefault = LookParam.entries.filter { value(it) != it.default }
             .joinToString(" ") { abbreviation(it) + it.format(value(it)) }
         return if (nonDefault.isEmpty()) look.code else "${look.code} · $nonDefault"
@@ -159,13 +235,20 @@ data class Recipe(
     /** Ban van ban de sao chep/chia se. */
     fun toPlainText(): String = buildString {
         appendLine(name.ifBlank { "Công thức không tên" })
-        appendLine("Creative Look: ${look.code} (${look.label})")
-        LookParam.entries.forEach { appendLine("${it.label}: ${it.format(value(it))}") }
+        if (isPP) {
+            val p = pp ?: PictureProfile()
+            appendLine("Picture Profile" + if (p.slot.isNotBlank()) " (${p.slot})" else "")
+            p.rows().forEach { (_, k, v) -> appendLine("$k: $v") }
+        } else {
+            appendLine("Creative Look: ${look.code} (${look.label})")
+            LookParam.entries.forEach { appendLine("${it.label}: ${it.format(value(it))}") }
+        }
         appendLine("Cân bằng trắng: ${wbText()}")
         if (dro.isNotBlank()) appendLine("DRO/HDR: $dro")
         if (exposureComp.isNotBlank()) appendLine("Bù phơi sáng: $exposureComp")
         if (camera.isNotBlank()) appendLine("Máy ảnh: $camera")
         if (notes.isNotBlank()) appendLine("Ghi chú: $notes")
+        if (source.isNotBlank()) appendLine("Nguồn: $source")
     }.trimEnd()
 
     companion object {

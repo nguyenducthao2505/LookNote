@@ -48,7 +48,9 @@ import androidx.compose.ui.unit.dp
 import com.looknote.app.AppGraph
 import com.looknote.app.model.CreativeLook
 import com.looknote.app.model.LookParam
+import com.looknote.app.model.PictureProfile
 import com.looknote.app.model.Recipe
+import com.looknote.app.model.RecipeKind
 import com.looknote.app.model.WbShift
 import com.looknote.app.model.WhiteBalance
 import kotlin.math.roundToInt
@@ -92,25 +94,42 @@ fun RecipeEditScreen(id: String, onDone: (String?) -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            SectionTitle("Creative Look")
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 2.dp)) {
-                items(CreativeLook.entries) { l ->
-                    FilterChip(selected = r.look == l, onClick = { r = r.copy(look = l) }, label = { Text(l.code) })
+            SectionTitle("Loại công thức")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RecipeKind.entries.forEach { k ->
+                    FilterChip(
+                        selected = r.kind == k,
+                        onClick = {
+                            r = r.copy(kind = k, pp = if (k == RecipeKind.PICTURE_PROFILE) (r.pp ?: PictureProfile()) else r.pp)
+                        },
+                        label = { Text(k.label) },
+                    )
                 }
             }
-            MutedText("${r.look.label}: ${r.look.note}")
 
-            SectionTitle("Thông số (thứ tự như menu máy ảnh)")
-            SectionCard(Modifier.fillMaxWidth()) {
-                LookParam.entries.forEach { p ->
-                    IntStepper(
-                        label = p.label,
-                        value = r.value(p),
-                        min = p.min,
-                        max = p.max,
-                        format = { p.format(it) },
-                        onChange = { r = r.withValue(p, it) },
-                    )
+            if (r.isPP) {
+                PictureProfileEditor(r.pp ?: PictureProfile()) { r = r.copy(pp = it) }
+            } else {
+                SectionTitle("Creative Look")
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 2.dp)) {
+                    items(CreativeLook.entries) { l ->
+                        FilterChip(selected = r.look == l, onClick = { r = r.copy(look = l) }, label = { Text(l.code) })
+                    }
+                }
+                MutedText("${r.look.label}: ${r.look.note}")
+
+                SectionTitle("Thông số (thứ tự như menu máy ảnh)")
+                SectionCard(Modifier.fillMaxWidth()) {
+                    LookParam.entries.forEach { p ->
+                        IntStepper(
+                            label = p.label,
+                            value = r.value(p),
+                            min = p.min,
+                            max = p.max,
+                            format = { p.format(it) },
+                            onChange = { r = r.withValue(p, it) },
+                        )
+                    }
                 }
             }
 
@@ -172,6 +191,10 @@ fun RecipeEditScreen(id: String, onDone: (String?) -> Unit) {
             OutlinedTextField(
                 value = r.notes, onValueChange = { r = r.copy(notes = it) },
                 label = { Text("Ghi chú") }, minLines = 3, modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = r.source, onValueChange = { r = r.copy(source = it) },
+                label = { Text("Nguồn (tác giả công thức)") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
             )
             Button(onClick = { save() }, modifier = Modifier.fillMaxWidth()) { Text("Lưu công thức") }
             Spacer(Modifier.height(24.dp))
@@ -235,5 +258,60 @@ fun DoubleStepper(
         max = (lim / step).roundToInt(),
         format = { format(it * step) },
         onChange = { onChange(WbShift.snap(it * step, step)) },
+    )
+}
+
+@Composable
+private fun PictureProfileEditor(p: PictureProfile, onChange: (PictureProfile) -> Unit) {
+
+    SectionTitle("Gamma & màu")
+    SectionCard(Modifier.fillMaxWidth()) {
+        PpField("Ô PP (vd: PP1)", p.slot) { onChange(p.copy(slot = it)) }
+        PpField("Gamma (Movie, Still, Cine1–4, HLG…)", p.gamma) { onChange(p.copy(gamma = it)) }
+        PpField("Black Gamma – Range (Wide/Middle/Narrow)", p.blackGammaRange) { onChange(p.copy(blackGammaRange = it)) }
+        PpNum("Black Gamma – Level", p.blackGammaLevel, -7, 7) { onChange(p.copy(blackGammaLevel = it)) }
+        PpNum("Black Level", p.blackLevel, -15, 15) { onChange(p.copy(blackLevel = it)) }
+        PpField("Knee – Mode", p.kneeMode) { onChange(p.copy(kneeMode = it)) }
+        PpField("Knee – Point (vd: 75%)", p.kneePoint) { onChange(p.copy(kneePoint = it)) }
+        PpNum("Knee – Slope", p.kneeSlope, -5, 5) { onChange(p.copy(kneeSlope = it)) }
+        PpField("Color Mode (Movie, Still, Cinema, Pro, ITU709 Matrix, S-Gamut…)", p.colorMode) { onChange(p.copy(colorMode = it)) }
+        PpNum("Saturation", p.saturation, -32, 32) { onChange(p.copy(saturation = it)) }
+        PpNum("Color Phase", p.colorPhase, -7, 7) { onChange(p.copy(colorPhase = it)) }
+    }
+    SectionTitle("Độ đậm màu (Color Depth)")
+    SectionCard(Modifier.fillMaxWidth()) {
+        PpNum("R", p.depthR, -7, 7) { onChange(p.copy(depthR = it)) }
+        PpNum("G", p.depthG, -7, 7) { onChange(p.copy(depthG = it)) }
+        PpNum("B", p.depthB, -7, 7) { onChange(p.copy(depthB = it)) }
+        PpNum("C", p.depthC, -7, 7) { onChange(p.copy(depthC = it)) }
+        PpNum("M", p.depthM, -7, 7) { onChange(p.copy(depthM = it)) }
+        PpNum("Y", p.depthY, -7, 7) { onChange(p.copy(depthY = it)) }
+    }
+    SectionTitle("Chi tiết (Detail)")
+    SectionCard(Modifier.fillMaxWidth()) {
+        PpNum("Level", p.detailLevel, -7, 7) { onChange(p.copy(detailLevel = it)) }
+        PpField("Mode (Auto/Manual)", p.detailMode) { onChange(p.copy(detailMode = it)) }
+        PpNum("V/H Balance", p.vhBalance, -2, 2) { onChange(p.copy(vhBalance = it)) }
+        PpField("B/W Balance (Type1–5)", p.bwBalance) { onChange(p.copy(bwBalance = it)) }
+        PpNum("Limit", p.limit, 0, 7) { onChange(p.copy(limit = it)) }
+        PpNum("Crispening", p.crispening, 0, 7) { onChange(p.copy(crispening = it)) }
+        PpNum("Hi-Light Detail", p.highlightDetail, 0, 4) { onChange(p.copy(highlightDetail = it)) }
+    }
+}
+
+@Composable
+private fun PpField(label: String, value: String, onValue: (String) -> Unit) {
+    OutlinedTextField(
+        value = value, onValueChange = onValue,
+        label = { Text(label) }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+@Composable
+private fun PpNum(label: String, value: Int, min: Int, max: Int, onValue: (Int) -> Unit) {
+    IntStepper(
+        label = label, value = value, min = min, max = max,
+        format = { if (it > 0) "+$it" else it.toString() },
+        onChange = onValue,
     )
 }

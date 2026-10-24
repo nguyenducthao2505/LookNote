@@ -100,19 +100,33 @@ fun RecipeDetailScreen(id: String, onBack: () -> Unit, onEdit: () -> Unit, onDup
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                LookBadge(r.look.code, large = true)
+                LookBadge(r.badge(), large = true)
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("Creative Look: ${r.look.label}", style = MaterialTheme.typography.titleMedium)
-                    MutedText(r.look.note)
+                    if (r.isPP) {
+                        Text("Picture Profile" + (r.pp?.slot?.takeIf { it.isNotBlank() }?.let { " · $it" } ?: ""), style = MaterialTheme.typography.titleMedium)
+                        MutedText("Cài trong MENU › Picture Profile của máy (α7C II có PP1–PP11)")
+                    } else {
+                        Text("Creative Look: ${r.look.label}", style = MaterialTheme.typography.titleMedium)
+                        MutedText(r.look.note)
+                    }
                 }
             }
 
             SectionCard(Modifier.fillMaxWidth()) {
-                LookParam.entries.forEach { p ->
-                    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
-                        Text(p.label, Modifier.weight(1f))
-                        Text(p.format(r.value(p)), fontWeight = FontWeight.Bold)
+                val ppData = r.pp
+                if (r.isPP && ppData != null) {
+                    var group = ""
+                    ppData.rows().forEach { (g, k, v) ->
+                        if (g != group) { group = g; SectionTitle(g) }
+                        InfoRow(k, v)
+                    }
+                } else {
+                    LookParam.entries.forEach { p ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
+                            Text(p.label, Modifier.weight(1f))
+                            Text(p.format(r.value(p)), fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 6.dp))
@@ -123,6 +137,7 @@ fun RecipeDetailScreen(id: String, onBack: () -> Unit, onEdit: () -> Unit, onDup
                 if (r.dro.isNotBlank()) InfoRow("DRO/Auto HDR", r.dro)
                 if (r.exposureComp.isNotBlank()) InfoRow("Bù phơi sáng", r.exposureComp)
                 if (r.camera.isNotBlank()) InfoRow("Máy ảnh", r.camera)
+                if (r.source.isNotBlank()) InfoRow("Nguồn", r.source)
             }
 
             if (r.notes.isNotBlank()) {

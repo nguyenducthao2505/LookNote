@@ -48,27 +48,49 @@ object RecipeCardRenderer {
         // Huy hieu Look
         val badge = RectF(W - m - 190f, m, W - m, m + 120f)
         c.drawRoundRect(badge, 24f, 24f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ACCENT })
-        val bp = p(Color.BLACK, if (r.look.code.length > 2) 58f else 70f, bold = true, align = Paint.Align.CENTER)
+        val code = r.badge()
+        val bp = p(Color.BLACK, if (code.length > 2) 58f else 70f, bold = true, align = Paint.Align.CENTER)
         val fm = bp.fontMetrics
-        c.drawText(r.look.code, badge.centerX(), badge.centerY() - (fm.ascent + fm.descent) / 2, bp)
+        c.drawText(code, badge.centerX(), badge.centerY() - (fm.ascent + fm.descent) / 2, bp)
 
         var y = m + maxOf(titleLayout.height.toFloat(), 120f) + 20f
-        c.drawText("Creative Look · ${r.look.label}", m, y + 40f, p(MUTED, 34f))
+        val subtitle = if (r.isPP) "Picture Profile" + (r.pp?.slot?.takeIf { it.isNotBlank() }?.let { " · $it" } ?: "")
+        else "Creative Look · ${r.look.label}"
+        c.drawText(subtitle, m, y + 40f, p(MUTED, 34f))
         y += 80f
 
-        // Bang thong so 2 cot
-        val panel = RectF(m, y, W - m, y + 4 * 110f + 40f)
-        c.drawRoundRect(panel, 28f, 28f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = PANEL })
         val colW = (W - 2 * m) / 2
-        LookParam.entries.forEachIndexed { i, prm ->
-            val col = i / 4
-            val row = i % 4
-            val x = m + 40f + col * colW
-            val yy = y + 70f + row * 110f
-            c.drawText(prm.label, x, yy, p(MUTED, 30f))
-            c.drawText(prm.format(r.value(prm)), x, yy + 46f, p(TEXT, 42f, bold = true))
+        val ppData = r.pp
+        if (r.isPP && ppData != null) {
+            // Bang PP: 2 cot x 10 dong
+            val rows = ppData.rows()
+            val per = (rows.size + 1) / 2
+            val rowH = 46f
+            val panel = RectF(m, y, W - m, y + per * rowH + 40f)
+            c.drawRoundRect(panel, 28f, 28f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = PANEL })
+            rows.forEachIndexed { i, (_, k, v) ->
+                val col = i / per
+                val row = i % per
+                val x = m + 30f + col * colW
+                val yy = y + 52f + row * rowH
+                c.drawText(k, x, yy, p(MUTED, 26f))
+                c.drawText(v, x + colW - 60f, yy, p(TEXT, 28f, bold = true, align = Paint.Align.RIGHT))
+            }
+            y = panel.bottom + 40f
+        } else {
+            // Bang thong so 2 cot
+            val panel = RectF(m, y, W - m, y + 4 * 110f + 40f)
+            c.drawRoundRect(panel, 28f, 28f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = PANEL })
+            LookParam.entries.forEachIndexed { i, prm ->
+                val col = i / 4
+                val row = i % 4
+                val x = m + 40f + col * colW
+                val yy = y + 70f + row * 110f
+                c.drawText(prm.label, x, yy, p(MUTED, 30f))
+                c.drawText(prm.format(r.value(prm)), x, yy + 46f, p(TEXT, 42f, bold = true))
+            }
+            y = panel.bottom + 50f
         }
-        y = panel.bottom + 50f
 
         c.drawText("Cân bằng trắng", m, y + 30f, p(MUTED, 30f))
         c.drawText(r.wbText(), m, y + 80f, p(TEXT, 42f, bold = true))
@@ -78,6 +100,9 @@ object RecipeCardRenderer {
             r.exposureComp.takeIf { it.isNotBlank() }?.let { "Bù sáng: $it" },
             r.camera.takeIf { it.isNotBlank() }?.let { "Máy: $it" },
         ).joinToString("   ·   ")
+        if (r.source.isNotBlank()) {
+            c.drawText("Nguồn: " + r.source, m, y + 30f, p(MUTED, 28f)); y += 50f
+        }
         if (extras.isNotBlank()) {
             c.drawText(extras, m, y + 30f, p(MUTED, 30f)); y += 60f
         }

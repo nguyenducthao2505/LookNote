@@ -74,6 +74,7 @@ fun RecipesScreen(onOpen: (String) -> Unit, onNew: () -> Unit) {
     var query by remember { mutableStateOf("") }
     var lookFilter by remember { mutableStateOf<CreativeLook?>(null) }
     var favOnly by remember { mutableStateOf(false) }
+    var ppOnly by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
     var pasteDialog by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf(false) }
@@ -117,9 +118,10 @@ fun RecipesScreen(onOpen: (String) -> Unit, onNew: () -> Unit) {
     }
 
     val list = all.filter { r ->
-        (lookFilter == null || r.look == lookFilter) &&
+        (lookFilter == null || (!r.isPP && r.look == lookFilter)) &&
+            (!ppOnly || r.isPP) &&
             (!favOnly || r.favorite) &&
-            (query.isBlank() || r.name.contains(query, true) || r.notes.contains(query, true) || r.camera.contains(query, true))
+            (query.isBlank() || r.name.contains(query, true) || r.notes.contains(query, true) || r.camera.contains(query, true) || r.source.contains(query, true))
     }
 
     ScreenScaffold(
@@ -167,12 +169,15 @@ fun RecipesScreen(onOpen: (String) -> Unit, onNew: () -> Unit) {
                     FilterChip(selected = favOnly, onClick = { favOnly = !favOnly }, label = { Text("★ Yêu thích") })
                 }
                 item {
-                    FilterChip(selected = lookFilter == null, onClick = { lookFilter = null }, label = { Text("Tất cả") })
+                    FilterChip(selected = lookFilter == null && !ppOnly, onClick = { lookFilter = null; ppOnly = false }, label = { Text("Tất cả") })
+                }
+                item {
+                    FilterChip(selected = ppOnly, onClick = { ppOnly = !ppOnly; lookFilter = null }, label = { Text("Picture Profile") })
                 }
                 items(CreativeLook.entries) { l ->
                     FilterChip(
                         selected = lookFilter == l,
-                        onClick = { lookFilter = if (lookFilter == l) null else l },
+                        onClick = { lookFilter = if (lookFilter == l) null else l; ppOnly = false },
                         label = { Text(l.code) },
                     )
                 }
@@ -231,7 +236,7 @@ fun RecipesScreen(onOpen: (String) -> Unit, onNew: () -> Unit) {
 private fun RecipeRow(r: Recipe, onClick: () -> Unit, onFav: () -> Unit) {
     Card(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(Modifier.padding(start = 14.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            LookBadge(r.look.code)
+            LookBadge(r.badge())
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(

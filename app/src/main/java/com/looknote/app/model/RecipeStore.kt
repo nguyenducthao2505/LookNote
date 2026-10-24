@@ -18,9 +18,25 @@ class RecipeStore(private val file: File) {
         val loaded = if (file.exists()) {
             runCatching { RecipeCodec.listFromString(file.readText(Charsets.UTF_8)) }.getOrDefault(emptyList())
         } else {
-            BuiltInRecipes.all.also { persist(it) }
+            BuiltInRecipes.all.also {
+                persist(it)
+                runCatching { File(file.parentFile, "builtins.version").writeText(BuiltInRecipes.VERSION.toString()) }
+            }
         }
         _recipes.value = sort(loaded)
+        upgradeBuiltIns()
+    }
+
+    /** Khi bo cong thuc mau duoc cap nhat: thay ban mau cu, them mau moi, giu trang thai yeu thich. */
+    private fun upgradeBuiltIns() {
+        val vFile = File(file.parentFile, "builtins.version")
+        val old = runCatching { vFile.readText().trim().toInt() }.getOrDefault(1)
+        if (old >= BuiltInRecipes.VERSION) return
+        val favs = _recipes.value.filter { it.builtIn && it.favorite }.map { it.id }.toSet()
+        val fresh = BuiltInRecipes.all.map { if (it.id in favs) it.copy(favorite = true) else it }
+        val ids = fresh.map { it.id }.toSet()
+        commit(_recipes.value.filterNot { it.builtIn && it.id in ids } + fresh)
+        runCatching { vFile.writeText(BuiltInRecipes.VERSION.toString()) }
     }
 
     fun get(id: String): Recipe? = _recipes.value.firstOrNull { it.id == id }
