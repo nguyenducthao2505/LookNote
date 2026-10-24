@@ -10,7 +10,7 @@ Yêu cầu: Android 10 trở lên.
 |---|---|---|
 | Sổ công thức | Lưu không giới hạn; Creative Look (ST, PT, NT, VV, VV2, FL, FL2, FL3, IN, SH, BW, SE); 8 thông số theo thứ tự menu máy (Phạm vi nét −4…+4); cân bằng trắng + dịch A–B (bước 0,5) và G–M (bước 0,25) trong ±7; DRO, bù sáng, ghi chú; yêu thích; tìm kiếm, lọc theo Look; 10 công thức mẫu | Hoàn chỉnh |
 | Picture Profile | Lưu công thức PP: Gamma, Black Gamma, Black Level, Knee, Color Mode, Saturation, Color Phase, Color Depth (R/G/B/C/M/Y), Detail; cùng WB | Hoàn chỉnh |
-| Công thức mẫu | 30 công thức: 10 do LookNote soạn, 11 Creative Look và 9 Picture Profile sưu tầm từ cộng đồng (ghi rõ nguồn) | Hoàn chỉnh |
+| Công thức mẫu | 32 công thức: 10 do LookNote soạn, 13 Creative Look và 9 Picture Profile sưu tầm từ cộng đồng (ghi rõ nguồn) | Hoàn chỉnh |
 | Chia sẻ | Sao chép thông số dạng chữ; mã chia sẻ `LOOKNOTE1:…`; mã QR; thẻ công thức (ảnh PNG) kèm QR; nhập từ ảnh QR hoặc dán mã; xuất/nhập toàn bộ ra tệp JSON (sao lưu) | Hoàn chỉnh |
 | Đọc ảnh | EXIF đầy đủ (máy, ống kính, tiêu cự, khẩu, tốc, ISO, bù sáng, thời gian) từ JPEG/ARW; MakerNote Sony: Creative Look/Style, tương phản, bão hòa, độ nét, WB, nhiệt độ màu; xem toàn bộ thẻ MakerNote; tạo công thức từ ảnh | Hoàn chỉnh (một phần thông số Sony lưu dạng mã hóa – xem ghi chú) |
 | Khung & huy hiệu | 4 kiểu: thanh trắng, thanh đen, viền trắng, huy hiệu trên ảnh; tự điền thông số chụp; huy hiệu Creative Look; chữ ký; lưu vào `Pictures/LookNote` hoặc chia sẻ | Hoàn chỉnh |

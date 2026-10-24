@@ -72,7 +72,7 @@ object BuiltInRecipes {
     )
 
     /** Tang so nay moi khi thay doi bo cong thuc mau de cap nhat tren may nguoi dung. */
-    const val VERSION = 2
+    const val VERSION = 3
 
     private const val PP_NOTE = "Cần tinh chỉnh theo điều kiện ánh sáng thực tế."
 
@@ -174,11 +174,23 @@ object BuiltInRecipes {
             CONTRAST to -1, HIGHLIGHTS to -5, SHADOWS to 1, FADE to 0, SATURATION to 1,
             SHARPNESS to 0, SHARPNESS_RANGE to 0, CLARITY to 1,
             ab = -1.0, gm = 0.25, src = "TikTok @_kelvinlong_"),
-        r("sony-instant", "Instant Preset (Sony)", CreativeLook.IN,
+        r("sony-instant", "Instant Preset 6500K (Sony)", CreativeLook.IN,
             CONTRAST to -3, HIGHLIGHTS to -5, SHADOWS to 6, FADE to 1, SATURATION to 0,
             SHARPNESS to 4, SHARPNESS_RANGE to 3, CLARITY to 1,
             wb = WhiteBalance.KELVIN, kelvin = 6500, ab = -2.5, gm = -5.0, cam = "α7C II",
             note = "Preset giới thiệu cho α7C II.", src = "TikTok Sony Electronics (11/05/2024)"),
+
+        r("sony-instant-5600", "Instant Preset 5600K (Sony)", CreativeLook.IN,
+            CONTRAST to -3, HIGHLIGHTS to 1, SHADOWS to 4, FADE to 1, SATURATION to 0,
+            SHARPNESS to 4, SHARPNESS_RANGE to 3, CLARITY to 1,
+            wb = WhiteBalance.KELVIN, kelvin = 5600, ab = -4.0, gm = -0.25, cam = "α7C II",
+            note = "Preset giới thiệu cho α7C II.", src = "TikTok Sony Electronics (25/05/2024)"),
+        r("ernst-sooc", "Straight Out of Camera (JustErnstThings)", CreativeLook.FL,
+            CONTRAST to 1, HIGHLIGHTS to -2, SHADOWS to 2, FADE to 2, SATURATION to -2,
+            SHARPNESS to 4, SHARPNESS_RANGE to 3, CLARITY to 3,
+            wb = WhiteBalance.KELVIN, kelvin = 6700, ab = 3.0, gm = 1.0,
+            note = "Giá trị G–M bị chữ khác che một phần, đọc là G1 – cần kiểm tra.",
+            src = "TikTok JustErnstThings (30/11/2023)"),
 
         // ---------- Picture Profile (island forest studio) ----------
         pp("pp-hamada", "Hamada Hideaki Japanese style", PictureProfile(

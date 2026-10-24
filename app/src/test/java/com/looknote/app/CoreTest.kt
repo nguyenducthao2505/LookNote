@@ -60,7 +60,7 @@ class CoreTest {
             assertEquals(WbShift.snap(r.wbAB, WbShift.STEP_AB), r.wbAB, 0.0)
             assertEquals(WbShift.snap(r.wbGM, WbShift.STEP_GM), r.wbGM, 0.0)
         }
-        assertEquals(30, all.size)
+        assertEquals(32, all.size)
     }
 
     @Test
