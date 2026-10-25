@@ -30,6 +30,7 @@ jobs:
           ./gradlew --no-daemon testDebugUnitTest assembleDebug
           mkdir -p dist
           cp app/build/outputs/apk/debug/app-debug.apk "dist/LookNote-build-${{ github.run_number }}.apk"
+          cp lookai/build/outputs/apk/debug/lookai-debug.apk "dist/LookAI-build-${{ github.run_number }}.apk"
 
       - name: Luu APK (Artifacts)
         uses: actions/upload-artifact@v4
@@ -41,6 +42,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: LookNote build ${{ github.run_number }}
-          body: Ban build tu dong. Tai file .apk ben duoi va cai dat tren Android 10 tro len.
+          name: LookNote + LookAI build ${{ github.run_number }}
+          body: "Ban build tu dong. LookNote = so cong thuc mau; LookAI = chinh anh theo cong thuc + lam min da (Gemini). Cai tren Android 10 tro len."
           files: dist/*.apk

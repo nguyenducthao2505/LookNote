@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "LookNote"
 include(":app")
+include(":lookai")
