@@ -12,13 +12,25 @@ android {
         applicationId = "com.looknote.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.2.2"
+        versionCode = 5
+        versionName = "0.2.3"
+    }
+
+    // Khoa ky co dinh: moi ban build co cung chu ky, cai de len ban cu duoc
+    signingConfigs {
+        create("fixed") {
+            storeFile = rootProject.file("keystore/looknote-release.jks")
+            storePassword = "looknote2026"
+            keyAlias = "looknote"
+            keyPassword = "looknote2026"
+        }
     }
 
     buildTypes {
+        getByName("debug") { signingConfig = signingConfigs.getByName("fixed") }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("fixed")
         }
     }
 

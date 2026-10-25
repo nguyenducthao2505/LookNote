@@ -12,12 +12,26 @@ android {
         applicationId = "com.looknote.ai"
         minSdk = 29
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
+    }
+
+    // Khoa ky co dinh: moi ban build co cung chu ky, cai de len ban cu duoc
+    signingConfigs {
+        create("fixed") {
+            storeFile = rootProject.file("keystore/looknote-release.jks")
+            storePassword = "looknote2026"
+            keyAlias = "looknote"
+            keyPassword = "looknote2026"
+        }
     }
 
     buildTypes {
-        release { isMinifyEnabled = false }
+        getByName("debug") { signingConfig = signingConfigs.getByName("fixed") }
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("fixed")
+        }
     }
 
     // Dung chung bo cong thuc mau voi app LookNote
