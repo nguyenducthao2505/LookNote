@@ -124,11 +124,14 @@ object AndroidImage {
     }
 
     /** Luu JPEG vao Pictures/LookAI, chep lai thong tin chup tu anh goc. */
-    fun saveJpeg(context: Context, bmp: Bitmap, name: String, quality: Int, exifFrom: Uri?): Uri {
+    fun saveJpeg(
+        context: Context, bmp: Bitmap, name: String, quality: Int, exifFrom: Uri?,
+        folder: String = Environment.DIRECTORY_PICTURES + "/LookAI", description: String? = null, software: String = "LookAI",
+    ): Uri {
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, name)
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/LookAI")
+            put(MediaStore.Images.Media.RELATIVE_PATH, folder)
             put(MediaStore.Images.Media.IS_PENDING, 1)
         }
         val cr = context.contentResolver
@@ -142,7 +145,8 @@ object AndroidImage {
             cr.openFileDescriptor(uri, "rw").use { pfd ->
                 val dst = ExifInterface(requireNotNull(pfd).fileDescriptor)
                 EXIF_TAGS.forEach { t -> srcExif.getAttribute(t)?.let { v -> dst.setAttribute(t, v) } }
-                dst.setAttribute(ExifInterface.TAG_SOFTWARE, "LookAI")
+                dst.setAttribute(ExifInterface.TAG_SOFTWARE, software)
+                if (description != null) dst.setAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION, description)
                 dst.setAttribute(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL.toString())
                 dst.saveAttributes()
             }
